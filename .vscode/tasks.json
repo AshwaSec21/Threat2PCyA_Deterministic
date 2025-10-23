@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Create venv (.venv)",
+      "type": "shell",
+      "command": "python -m venv .venv",
+      "problemMatcher": []
+    },
+    {
+      "label": "Install dependencies",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -NoProfile -Command \"& { if (Test-Path .\\.venv\\Scripts\\Activate.ps1) { . .\\.venv\\Scripts\\Activate.ps1 }; if (Test-Path .\\requirements.txt) { pip install -r requirements.txt } elseif (Test-Path .\\pyproject.toml) { pip install -e . } else { Write-Output 'No requirements.txt or pyproject.toml found'; } }\"",
+      "dependsOn": "Create venv (.venv)",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run tests (pytest)",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -NoProfile -Command \"& { . .\\.venv\\Scripts\\Activate.ps1; if (Get-Command pytest -ErrorAction SilentlyContinue) { pytest } else { pip install pytest; pytest } }\"",
+      "dependsOn": "Install dependencies",
+      "problemMatcher": []
+    }
+  ]
+}

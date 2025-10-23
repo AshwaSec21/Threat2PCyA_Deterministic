@@ -1,0 +1,7 @@
+# old
+# pandas==2.2.2
+# new (works with Python 3.13)
+pandas==2.2.3
+openpyxl==3.1.2
+PyYAML==6.0.1
+streamlit==1.37.1

@@ -1,0 +1,21 @@
+asset_match_policy: ANY   # ANY or ALL
+asset_synonyms:
+  "os esxi": ["esxi"]
+  "os linux": ["linux"]
+  "os windows": ["windows"]
+  "vcenter server": ["vcenter"]
+stop_words:
+  - system
+  - attack
+  - user
+  - flow
+  - service
+  - data
+  - info
+  - network
+  - device
+  - application
+  - software
+  - communication
+  - process
+  - control
