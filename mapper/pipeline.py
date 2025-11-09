@@ -373,11 +373,13 @@ def run_pipeline(
 
         rows.append({
             "ThreatId": trow.get("Id", t_idx),
-            "ThreatTitle": trow.get("Title",""),
-            "Source": trow.get("Source",""),
-            "Src": src, "Tgt": tgt,
-            "TraceableRIDs": "; ".join(sorted(traceable_rids_all)),   # <- from PCyA TIS Source
-            "MappedRIDs": "; ".join(sorted(matched_rids)),            # <- after asset gating
+            "ThreatTitle": trow.get("Title", ""),
+            "Threat_Description": trow.get("Description", ""),  # 🆕 new column (comes from TMT CSV)
+            "Source": trow.get("Source", ""),
+            "Src": src,
+            "Tgt": tgt,
+            "TraceableRIDs": "; ".join(sorted(traceable_rids_all)),
+            "MappedRIDs": "; ".join(sorted(matched_rids)),
             "StrayRIDs": "; ".join(sorted(stray_rids)),
             "Status": status,
             "MissingIEC": "; ".join(sorted(set(missing_iec))),
