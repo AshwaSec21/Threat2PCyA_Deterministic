@@ -80,6 +80,36 @@ def _cascade_candidate_iec(cand_row: dict, target_sl: int, allowed_families: Set
             seen.add(x); uniq.append(x)
     return uniq
 
+def _collect_candidate_iec(cand_row: dict, target_sl: int, allowed_families: Set[str], mode: str = "cascade") -> List[str]:
+    """
+    mode = 'cascade' -> include SL1..SL(target_sl)
+    mode = 'exact'   -> include only SL(target_sl)
+    """
+    out: List[str] = []
+    sl_range = range(1, target_sl + 1) if mode == "cascade" else range(target_sl, target_sl + 1)
+
+    for sl in sl_range:
+        col = None
+        for k in cand_row.keys():
+            ku = str(k).strip().upper()
+            if ku.startswith(f"SL{sl}"):
+                col = k; break
+        if not col:
+            continue
+        cell = str(cand_row.get(col, "")).strip()
+        if not cell or cell.lower() in {"not applicable", "check manually"}:
+            continue
+        for tok in extract_all_iec_ids(cell):
+            fam = tok.split()[0]
+            if fam in allowed_families:
+                out.append(tok)
+    # stable unique
+    seen, uniq = set(), []
+    for x in out:
+        if x not in seen:
+            seen.add(x); uniq.append(x)
+    return uniq
+
 def _build_pcya_crosswalk(pcya_df: pd.DataFrame, rid_col: str, iec_col: str,
                           allowed_families: Set[str]) -> Dict[str, Set[str]]:
     """
@@ -242,13 +272,27 @@ def run_pipeline(
         else: threats["Source"] = ""
 
     # Build desc-only keys + src/tgt + threat assets
-    threats["DescForKey"]  = threats["Description"]
-    threats["_desc_key"]   = threats["DescForKey"].map(_desc_key_from_report)
-    threats["_title_key"]  = threats.apply(lambda r: _title_key_from_report(r.get("Title",""), r.get("Source","")), axis=1)
 
-    src_tgt_df = threats["Description"].apply(lambda s: pd.Series(parse_src_tgt_from_report_desc(s) or ("", "")))
+    # 1) Parse src/tgt first
+    src_tgt_df = threats["Description"].apply(
+        lambda s: pd.Series(parse_src_tgt_from_report_desc(s) or ("", ""))
+    )
     src_tgt_df.columns = ["_Src", "_Tgt"]
     threats = pd.concat([threats, src_tgt_df], axis=1)
+
+    # 2) Build description-only key using src/tgt-aware function
+    from .parsing import _desc_key_from_report_with_assets, _title_key_from_report
+    threats["DescForKey"] = threats["Description"]
+    threats["_desc_key"] = threats.apply(
+        lambda r: _desc_key_from_report_with_assets(r["DescForKey"], r["_Src"], r["_Tgt"]),
+        axis=1
+    )
+
+    # (optional) title key unchanged; just re-run after we have Source
+    threats["_title_key"] = threats.apply(
+        lambda r: _title_key_from_report(r.get("Title", ""), r.get("Source", "")),
+        axis=1
+    )
 
     threats["_ThreatAssets"] = threats.apply(
         lambda r: {str(r["_Src"]).casefold(), str(r["_Tgt"]).casefold()} - {""},

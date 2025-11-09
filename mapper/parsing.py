@@ -18,6 +18,31 @@ def _normalize_text(s: str) -> str:
     return " ".join(s.split())
 
 # ---------- Keys (Description-only) ----------
+# add near existing imports/regexes
+import re
+
+
+def _desc_key_from_report_with_assets(report_description: str, src: str, tgt: str) -> str:
+    """
+    Build a description-only key from the TMT report description:
+      1) remove '<Src> to <Tgt>:' prefix (colon optional)
+      2) remove any remaining occurrences of src/tgt names in the body
+      3) normalize to a robust, punctuation/spacing-insensitive key
+    This makes keys align with candidates where placeholders are stripped out.
+    """
+    t = _REP_PREFIX.sub("", report_description or "")
+
+    def rm(token: str, s: str) -> str:
+        token = (token or "").strip()
+        if not token:
+            return s
+        # remove word-boundary matches, case-insensitive
+        pat = re.compile(rf"\b{re.escape(token)}\b", re.IGNORECASE)
+        return pat.sub("", s)
+
+    t = rm(src, t)
+    t = rm(tgt, t)
+    return _normalize_text(t)
 
 def _desc_key_from_candidate(threat_description: str) -> str:
     t = _CAND_PREFIX.sub("", threat_description or "")
