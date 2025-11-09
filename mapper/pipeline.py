@@ -129,7 +129,7 @@ def _build_pcya_crosswalk(pcya_df: pd.DataFrame, rid_col: str, iec_col: str,
 
 # --------------------- Asset helpers ---------------------
 
-_ASSET_SPLIT = re.compile(r"[;,/|]")
+_ASSET_SPLIT = re.compile(r"[;,/|\n\r\t]+")
 
 def _canon_asset_set(s: str) -> Set[str]:
     parts = [p.strip() for p in _ASSET_SPLIT.split(s or "") if p.strip()]
@@ -426,6 +426,9 @@ def run_pipeline(
         # Any leakage sanity (should be empty)
         stray_rids = matched_rids - traceable_rids_all
 
+        filtered_rids = traceable_rids_all - matched_rids
+
+
         rows.append({
             "ThreatId": trow.get("Id", t_idx),
             "ThreatTitle": trow.get("Title", ""),
@@ -438,6 +441,7 @@ def run_pipeline(
             "StrayRIDs": "; ".join(sorted(stray_rids)),
             "Status": status,
             "MissingIEC": "; ".join(sorted(set(missing_iec))),
+            "FilteredRIDs": "; ".join(sorted(filtered_rids)),
         })
 
 
