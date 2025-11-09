@@ -260,6 +260,14 @@ if st.session_state.do_run:
                     "only_in_threats": debug.get("desc_only_in_threats_sample"),
                     "only_in_candidates": debug.get("desc_only_in_candidates_sample"),
                 })
+            with st.expander("Threats with StrayRIDs (mapped but not traced via TIS Source)"):
+                df_stray = debug.get("threats_with_stray_rids")
+                if isinstance(df_stray, pd.DataFrame) and not df_stray.empty:
+                    st.dataframe(df_stray, use_container_width=True)
+                    st.caption(f"Count: {len(df_stray)}")
+                else:
+                    st.write("—")
+
 
         except Exception as e:
             st.session_state.last_error = str(e)
