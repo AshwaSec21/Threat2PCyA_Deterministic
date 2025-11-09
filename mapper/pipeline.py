@@ -353,6 +353,17 @@ def run_pipeline(
 
         candidate_iec_all.update(req_uni)
 
+        # --- Identify IECs that are missing in PCyA ---
+        # (i.e., required by candidate but not traced by any PCyA requirement)
+        missing_iec = []
+        for iec in req_uni:
+            match_rows = pcya[
+                pcya[pcya_iec_col].astype(str).str.contains(iec, case=False, regex=False)
+            ]
+            if match_rows.empty:
+                missing_iec.append(iec)
+
+
         # --- Debug probe for Threat 0 (optional) ---
         if str(trow.get("Id", t_idx)) == "0":
             debug["threat0_probe"] = {
@@ -428,6 +439,7 @@ def run_pipeline(
             "Status": status,
             "MissingIEC": "; ".join(sorted(set(missing_iec))),
         })
+
 
     final_df = pd.DataFrame(rows)
 
